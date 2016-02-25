@@ -72,7 +72,7 @@ weixin.textMsg(function(msg) {
             fromUserName : msg.toUserName,
             toUserName : msg.fromUserName,
             msgType : "news",
-            articles : items.slice(0,5),
+            articles : items.slice(0,4),
             funcFlag : 0
         }
         break;
