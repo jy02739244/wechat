@@ -82,13 +82,13 @@ weixin.textMsg(function(msg) {
             break;
         default:
             var reg = /(^[1-9]|1[0-2])月活动$/;
-            var res = reg.match(msg.content);
+            var res = msg.content.match(reg);
             if (res) {
                 var monthItems = [];
                 var monthReg = /^\d+-(0[1-9]|1[0-2])-\d{1,2}$/;
                 for (var i = 0; i < items.length; i++) {
                     var item = items[i];
-                    var month = monthReg.match(item.time);
+                    var month = item.time.match(monthReg);
                     if (month.length = 2 && month <= 10) {
                         month = month.substring(1, 2);
                     }
