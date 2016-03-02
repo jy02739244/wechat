@@ -89,8 +89,9 @@ weixin.textMsg(function(msg) {
                 content : JSON.parse(res.text).text,
                 funcFlag : 0
             };
+             weixin.sendMsg(resMsg)
         });
-        weixin.sendMsg(resMsg)
+       
         break;
         // var articles = [];
         // articles[0] = {
