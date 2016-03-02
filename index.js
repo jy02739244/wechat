@@ -65,6 +65,7 @@ weixin.textMsg(function(msg) {
             content : "稍后回复‘活动’获取上海追梦户外最新活动列表！",
             funcFlag : 0
         }
+        weixin.sendMsg(resMsg);
         break;
         case "活动":
         console.log('活动');
@@ -75,6 +76,7 @@ weixin.textMsg(function(msg) {
             articles : items.slice(0,5),
             funcFlag : 0
         }
+        weixin.sendMsg(resMsg);
         break;
         default:
         superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info="+encodeURI(msg.content)).end(function(err,res){
@@ -88,7 +90,7 @@ weixin.textMsg(function(msg) {
                 funcFlag : 0
             };
         });
-        
+        weixin.sendMsg(resMsg)
         break;
         // var articles = [];
         // articles[0] = {
@@ -112,7 +114,7 @@ weixin.textMsg(function(msg) {
         
     }
 
-    weixin.sendMsg(resMsg);
+    
 });
 
 // 监听图片消息
