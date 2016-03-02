@@ -27,6 +27,7 @@ function getItems(){
                 title: title,
                 description:title,
                 picUrl:imgSrc,
+                time:time,
                 url: address+href
             });
         });
