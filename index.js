@@ -77,13 +77,18 @@ weixin.textMsg(function(msg) {
         }
         break;
         default:
-        resMsg = {
-            fromUserName : msg.toUserName,
-            toUserName : msg.fromUserName,
-            msgType : "text",
-            content : "回复‘活动’获取上海追梦户外最新活动列表！",
-            funcFlag : 0
-        };
+        superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info="+encodeURI(msg.content)).end(function(err,res){
+            console.log(res.text);
+            ;
+            resMsg = {
+                fromUserName : msg.toUserName,
+                toUserName : msg.fromUserName,
+                msgType : "text",
+                content : JSON.parse(res.text).text,
+                funcFlag : 0
+            };
+        });
+        
         break;
         // var articles = [];
         // articles[0] = {
