@@ -174,7 +174,7 @@ weixin.eventMsg(function(msg) {
             fromUserName: msg.toUserName,
             toUserName: msg.fromUserName,
             msgType: "text",
-            content: "欢迎关注，回复'活动'获取上海追梦户外最新活动！",
+            content: "欢迎关注!\r\n回复'活动'获取上海追梦户外最新活动！\r\n回复'*月活动'获取相应月份的活动信息，如3月活动！\r\n本公众账号支持聊天！",
             funcFlag: 0
         };
         weixin.sendMsg(resMsg);
