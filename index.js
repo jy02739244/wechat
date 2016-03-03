@@ -90,7 +90,9 @@ weixin.textMsg(function(msg) {
                     var item = items[i];
                     console.log(item);
                     console.log(res);
+                    console.log(item.time);
                     var month = item.time.match(monthReg);
+                    console.log(month);
                     if (res[1] == month[1]) {
                         monthItems.push(items[i]);
                     }
