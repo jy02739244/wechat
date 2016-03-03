@@ -85,14 +85,10 @@ weixin.textMsg(function(msg) {
             var res = msg.content.match(reg);
             if (res!=null&&res.length==2) {
                 var monthItems = [];
-                var monthReg = /^\d+-0{0,1}([1-9]{1,2})-\d{1,2}$/;
+                var monthReg = /^\d+-0{0,1}([0-9]{1,2})-\d{1,2}$/;
                 for (var i = 0; i < items.length; i++) {
                     var item = items[i];
-                    console.log(item);
-                    console.log(res);
-                    console.log(item.time);
                     var month = item.time.match(monthReg);
-                    console.log(month);
                     if (res[1] == month[1]) {
                         monthItems.push(items[i]);
                     }
