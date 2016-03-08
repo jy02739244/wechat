@@ -8,12 +8,12 @@ var app = express();
 var address = "http://www.hdb.com";
 var items = [];
 
-var fetchUrl = function (url, callback) {
-    console.log("正在抓取的是"+url);
+var fetchUrl = function (obj, callback) {
+    console.log("正在抓取的是"+obj.href);
     phantom.create().then(function(ph) {
         ph.createPage().then(function(page) {
-            page.open(url).then(function(status) {
-                console.log(url+" "+status);
+            page.open(obj.href).then(function(status) {
+                console.log(obj.href+" "+status);
                 page.property('content').then(function(content) {
                     var $=cheerio.load(content);
                     var imgs=$('.dt_content_pic img');
@@ -27,7 +27,8 @@ var fetchUrl = function (url, callback) {
                     callback(null, {
                         title:$('#dt_title').text().trim(),
                         description: $('#dt_title').text().trim(),
-                        href:url,
+                        url:obj.href,
+                        time:obj.time,
                         picUrl:picUrl
                     });
                 });
@@ -50,15 +51,18 @@ function getItems() {
             if (!time) {
                 return;
             }
-
             var href = $element.find("a[class=hd_pic_A]").attr('href');
-            topicUrls.push(address+href);
+            var obj={time:time,href:address+href};
+            topicUrls.push(obj);
         });
         async.mapLimit(topicUrls, 5,function (url,callback){
             fetchUrl(url,callback);
 
         },function(err, result){
             console.log('final:');
+            result.sort(function(a,b){
+                return new Date(a.time)-new Date(b.time);
+            });
             console.log(result);
             items=result;
         });
