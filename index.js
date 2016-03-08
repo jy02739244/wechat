@@ -2,39 +2,68 @@ var weixin = require('weixin-api');
 var express = require('express');
 var superagent = require('superagent');
 var cheerio = require('cheerio');
+var async=require('async');
+var phantom = require('phantom');
 var app = express();
 var address = "http://www.hdb.com";
 var items = [];
 
-function getItems() {
-    superagent.get('http://www.hdb.com/timeline/lejz3')
-        .end(function(err, sres) {
-            if (err) {
-                return console.log(err);
-            }
-            var $ = cheerio.load(sres.text);
-            $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
-                var $element = $(element);
-                var timeStr = $element.find(".find_main_time p").text();
-                var time = timeStr.substring(0, 10);
-                if (!time) {
-                    return;
-                }
-                var title = $element.find('.find_main_title').text();
-                var href = $element.find("a[class=hd_pic_A]").attr('href');
-
-                var imgSrc = $element.find("a img[class=hd_pic]").attr('src');
-                items.push({
-                    title: title,
-                    description: title,
-                    picUrl: imgSrc,
-                    time: time,
-                    url: address + href
+var fetchUrl = function (url, callback) {
+    console.log("正在抓取的是"+url);
+    phantom.create().then(function(ph) {
+        ph.createPage().then(function(page) {
+            page.open(url).then(function(status) {
+                console.log(url+" "+status);
+                page.property('content').then(function(content) {
+                    var $=cheerio.load(content);
+                    var imgs=$('.dt_content_pic img');
+                    var picUrl=null;
+                    if(imgs!=null&&imgs.length>1){
+                        picUrl=imgs[1].attribs['data-src'];
+                    }
+                    
+                    page.close();
+                    ph.exit();
+                    callback(null, {
+                        title:$('#dt_title').text().trim(),
+                        description: $('#dt_title').text().trim(),
+                        href:url,
+                        picUrl:picUrl
+                    });
                 });
             });
-            items.reverse();
-
         });
+    });
+};
+function getItems() {
+    superagent.get('http://www.hdb.com/timeline/lejz3')
+    .end(function(err, sres) {
+        if (err) {
+            return console.log(err);
+        }
+        var topicUrls = [];
+        var $ = cheerio.load(sres.text);
+        $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
+            var $element = $(element);
+            var timeStr = $element.find(".find_main_time p").text();
+            var time = timeStr.substring(0, 10);
+            if (!time) {
+                return;
+            }
+
+            var href = $element.find("a[class=hd_pic_A]").attr('href');
+            topicUrls.push(address+href);
+        });
+        async.mapLimit(topicUrls, 5,function (url,callback){
+            fetchUrl(url,callback);
+
+        },function(err, result){
+            console.log('final:');
+            console.log(result);
+            items=result;
+        });
+
+    });
 }
 getItems();
 // 接入验证
@@ -58,68 +87,68 @@ weixin.textMsg(function(msg) {
 
     switch (msg.content) {
         case "更新":
-            console.log("更新");
-            getItems();
-            resMsg = {
-                fromUserName: msg.toUserName,
-                toUserName: msg.fromUserName,
-                msgType: "text",
-                content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
-                funcFlag: 0
-            }
-            weixin.sendMsg(resMsg);
-            break;
+        console.log("更新");
+        getItems();
+        resMsg = {
+            fromUserName: msg.toUserName,
+            toUserName: msg.fromUserName,
+            msgType: "text",
+            content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
+            funcFlag: 0
+        }
+        weixin.sendMsg(resMsg);
+        break;
         case "活动":
-            console.log('活动');
+        console.log('活动');
+        resMsg = {
+            fromUserName: msg.toUserName,
+            toUserName: msg.fromUserName,
+            msgType: "news",
+            articles: items.slice(0, 5),
+            funcFlag: 0
+        }
+        weixin.sendMsg(resMsg);
+        break;
+        default:
+        var reg = /(^[1-9]|1[0-2])月活动$/;
+        var res = msg.content.match(reg);
+        if (res!=null&&res.length==2) {
+            var monthItems = [];
+            var monthReg = /^\d+-0{0,1}([0-9]{1,2})-\d{1,2}$/;
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                var month = item.time.match(monthReg);
+                if (res[1] == month[1]) {
+                    monthItems.push(items[i]);
+                }
+            }
+            if (monthItems.length > 5) {
+                monthItems = monthItems.slice(0, 5);
+            }
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
                 msgType: "news",
-                articles: items.slice(0, 5),
+                articles: monthItems,
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
-            break;
-        default:
-            var reg = /(^[1-9]|1[0-2])月活动$/;
-            var res = msg.content.match(reg);
-            if (res!=null&&res.length==2) {
-                var monthItems = [];
-                var monthReg = /^\d+-0{0,1}([0-9]{1,2})-\d{1,2}$/;
-                for (var i = 0; i < items.length; i++) {
-                    var item = items[i];
-                    var month = item.time.match(monthReg);
-                    if (res[1] == month[1]) {
-                        monthItems.push(items[i]);
-                    }
-                }
-                if (monthItems.length > 5) {
-                    monthItems = monthItems.slice(0, 5);
-                }
+        } else {
+            superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
+                console.log(res.text);;
                 resMsg = {
                     fromUserName: msg.toUserName,
                     toUserName: msg.fromUserName,
-                    msgType: "news",
-                    articles: monthItems,
+                    msgType: "text",
+                    content: JSON.parse(res.text).text,
                     funcFlag: 0
-                }
+                };
                 weixin.sendMsg(resMsg);
-            } else {
-                superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
-                    console.log(res.text);;
-                    resMsg = {
-                        fromUserName: msg.toUserName,
-                        toUserName: msg.fromUserName,
-                        msgType: "text",
-                        content: JSON.parse(res.text).text,
-                        funcFlag: 0
-                    };
-                    weixin.sendMsg(resMsg);
-                });
-            }
+            });
+        }
 
 
-            break;
+        break;
             // var articles = [];
             // articles[0] = {
             //     title : "漫步千年徽杭古道 挑战高山沙漠龙须山",
@@ -140,10 +169,10 @@ weixin.textMsg(function(msg) {
             //     url : "http://www.hdb.com/party/ls9x-PCHomeDetail.html"
             // };
 
-    }
+        }
 
 
-});
+    });
 
 // 监听图片消息
 weixin.imageMsg(function(msg) {

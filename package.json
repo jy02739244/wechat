@@ -9,8 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^1.5.2",
     "cheerio": "^0.20.0",
     "express": "^4.13.4",
+    "phantom": "^2.0.4",
     "superagent": "^1.7.2",
     "weixin-api": "^0.1.7"
   }
