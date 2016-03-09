@@ -138,12 +138,12 @@ weixin.textMsg(function(msg) {
                 console.log(error);
             }
             console.log("***:"+res);
-            
+
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
                 msgType: "news",
-                articles: res.split(','),
+                articles: res.split(","),
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
