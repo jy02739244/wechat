@@ -1,0 +1,45 @@
+{
+"wx": {
+    "app_id": "wx5b935bf32ec89edb",
+    "app_secret": "cc641854607ce27b9e7f6fd6746b73f3",
+    "wx_menu": {
+      "button": [
+        {
+          "name": "菜单",
+          "sub_button": [
+            {
+              "type": "view",
+              "name": "资讯菜单",
+              "url": "http://ip:port/all"
+            }
+          ]
+        },
+        {
+          "name": "菜单2",
+          "sub_button": [
+            {
+              "type": "view",
+              "name": "我的11",
+              "url": "http://ip:port/all"
+            }
+          ]
+        },
+        {
+          "name": "助理",
+          "sub_button": [
+            {
+              "type": "view",
+              "name": "大学",
+              "url": "http://ip:port/all"
+            },
+            {
+              "type": "view",
+              "name": "社区",
+              "url": "http://ip:port/all"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

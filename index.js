@@ -1,4 +1,5 @@
 var weixin = require('weixin-api');
+var wxapi = require('./wxapi');
 var express = require('express');
 var superagent = require('superagent');
 var phantom = require('phantom');
@@ -6,6 +7,7 @@ var async=require('async');
 var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
+var config=wxapi();
 var redis=require('redis');
 var client =redis.createClient(5116,'10.9.21.212',{});
 client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
