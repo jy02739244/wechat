@@ -85,7 +85,7 @@ var getItems=function () {
                 for(var i=0;i<result.length;i++){
                     var score=result[i].time.replace(/-/ig,'');
                     console.log(score);
-                    client.zadd('activity',score,Json.stringify(result[i]),function(error,res){
+                    client.zadd('activity',score,JSON.stringify(result[i]),function(error,res){
                         if(error){
                             console.log(error);
                         }
