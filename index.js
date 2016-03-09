@@ -7,8 +7,8 @@ var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
 var redis=require('redis');
-var client =redis.createClient(6379,'192.168.8.38',{});
-// client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
+var client =redis.createClient(5116,'10.9.21.212',{});
+client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
 client.on("error", function (err) {  
     console.log("Error " + err);
     client.quit();   
