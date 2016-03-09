@@ -76,6 +76,7 @@ var getItems=function () {
             // result.sort(function(a,b){
             //     return new Date(a.time)-new Date(b.time);
             // });
+            console.log(result);
             client.del('activity',function(error,res){
                 if(error){
                     console.log(error);
