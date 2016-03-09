@@ -142,7 +142,7 @@ weixin.textMsg(function(msg) {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
                 msgType: "news",
-                articles: res,
+                articles: JSON.parse(res),
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
