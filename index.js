@@ -137,7 +137,7 @@ weixin.textMsg(function(msg) {
             if(error){
                 console.log(error);
             }
-            console.log(res);
+            console.log("***:"+res);
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
