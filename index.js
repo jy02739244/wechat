@@ -5,6 +5,21 @@ var reptile=require('./items');
 var app = express();
 var items = [];
 reptile.getItems(items);
+var redis=require('redis');
+var client =redis.createClient(5116,'10.9.21.212',{});
+client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
+client.on("error", function (err) {  
+    console.log("Error " + err);  
+});
+client.set('a','b',function(error, res){
+    if(error){
+        console.log(error);
+    }
+    console.log(res);
+});
+    
+
+client.quit(); 
 // 接入验证
 app.get('/', function(req, res) {
 
