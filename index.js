@@ -90,7 +90,6 @@ var getItems=function () {
                     }
                     console.log(res);
                 });
-                client.quit();
             }
         });
 
@@ -144,7 +143,6 @@ weixin.textMsg(function(msg) {
             }
             weixin.sendMsg(resMsg);
         });
-        client.quit();
         break;
         default:
         var reg = /(^[1-9]|1[0-2])月活动$/;
