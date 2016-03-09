@@ -84,7 +84,7 @@ var getItems=function () {
                 console.log("删除activity:"+res);
                 for(var i=0;i<result.length;i++){
                     console.log((result.time));
-                    var score=(result.time).replace(/-/ig,'');
+                    var score=result[i].time.replace(/-/ig,'');
                     console.log(score);
                     client.zadd('activity',score,result[i],function(error,res){
                         if(error){
