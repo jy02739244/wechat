@@ -1,25 +1,102 @@
 var weixin = require('weixin-api');
 var express = require('express');
 var superagent = require('superagent');
-var reptile=require('./items');
+var phantom = require('phantom');
+var async=require('async');
+var cheerio = require('cheerio');
+var superagent = require('superagent');
 var app = express();
-var items = [];
-reptile.getItems(items);
 var redis=require('redis');
-var client =redis.createClient(5116,'10.9.21.212',{});
-client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
+var client =redis.createClient(6379,'192.168.8.38',{});
+// client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
 client.on("error", function (err) {  
-    console.log("Error " + err);  
+    console.log("Error " + err);
+    client.quit();   
 });
-client.set('a','b',function(error, res){
-    if(error){
-        console.log(error);
-    }
-    console.log(res);
-});
-    
 
-client.quit(); 
+
+var fetchUrl = function (obj, callback) {
+    console.log("正在抓取的是"+obj.href);
+    phantom.create().then(function(ph) {
+        ph.createPage().then(function(page) {
+            page.open(obj.href).then(function(status) {
+                console.log(obj.href+" "+status);
+                page.property('content').then(function(content) {
+                    var $=cheerio.load(content);
+                    var imgs=$('.dt_content_pic img');
+                    var picUrl=null;
+                    if(imgs!=null&&imgs.length>1){
+                        picUrl=imgs[1].attribs['data-src'];
+                    }
+                    
+                    page.close();
+                    ph.exit();
+                    callback(null, {
+                        title:$('#dt_title').text().trim(),
+                        description: $('#dt_title').text().trim(),
+                        url:obj.href,
+                        time:obj.time,
+                        picUrl:picUrl
+                    });
+                });
+            });
+        });
+    });
+};
+var getScore=function(month,day){
+    var date=new Date();
+    var monthStr=month>=10?month:('0'+month);
+    return date.getFullYear()+monthStr+day;
+}
+var getItems=function () {
+    superagent.get('http://www.hdb.com/timeline/lejz3')
+    .end(function(err, sres) {
+        if (err) {
+            return console.log(err);
+        }
+        var topicUrls = [];
+        var $ = cheerio.load(sres.text);
+        var address = "http://www.hdb.com";
+        $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
+            var $element = $(element);
+            var timeStr = $element.find(".find_main_time p").text();
+            var time = timeStr.substring(0, 10);
+            if (!time) {
+                return;
+            }
+            var href = $element.find("a[class=hd_pic_A]").attr('href');
+            var obj={time:time,href:address+href};
+            topicUrls.push(obj);
+        });
+        async.mapLimit(topicUrls, 5,function (url,callback){
+            fetchUrl(url,callback);
+
+        },function(err, result){
+            console.log('final:');
+            // result.sort(function(a,b){
+            //     return new Date(a.time)-new Date(b.time);
+            // });
+            client.del('activity',function(error,res){
+                if(error){
+                    console.log(error);
+                }
+                console.log("删除activity:"+res);
+            });
+            for(var i=0;i<result.length;i++){
+                var score=result.time.replace('.','');
+                client.zadd('activity',score,result[i],function(error,res){
+                    if(error){
+                        console.log(error);
+                    }
+                    console.log(res);
+                });
+                client.quit();
+            }
+        });
+
+    });
+}
+getItems();
 // 接入验证
 app.get('/', function(req, res) {
 
@@ -42,7 +119,7 @@ weixin.textMsg(function(msg) {
     switch (msg.content) {
         case "更新":
         console.log("更新");
-        reptile.getItems(items);
+        getItems();
         resMsg = {
             fromUserName: msg.toUserName,
             toUserName: msg.fromUserName,
@@ -54,39 +131,39 @@ weixin.textMsg(function(msg) {
         break;
         case "活动":
         console.log('活动');
-        resMsg = {
-            fromUserName: msg.toUserName,
-            toUserName: msg.fromUserName,
-            msgType: "news",
-            articles: items.slice(0, 5),
-            funcFlag: 0
-        }
-        weixin.sendMsg(resMsg);
-        break;
-        default:
-        var reg = /(^[1-9]|1[0-2])月活动$/;
-        var res = msg.content.match(reg);
-        if (res!=null&&res.length==2) {
-            var monthItems = [];
-            var monthReg = /^\d+-0{0,1}([0-9]{1,2})-\d{1,2}$/;
-            for (var i = 0; i < items.length; i++) {
-                var item = items[i];
-                var month = item.time.match(monthReg);
-                if (res[1] == month[1]) {
-                    monthItems.push(items[i]);
-                }
-            }
-            if (monthItems.length > 5) {
-                monthItems = monthItems.slice(0, 5);
+        client.zrange('activity',0,5,function(error,res){
+            if(error){
+                console.log(error);
             }
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
                 msgType: "news",
-                articles: monthItems,
+                articles: res,
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
+        });
+        client.quit();
+        break;
+        default:
+        var reg = /(^[1-9]|1[0-2])月活动$/;
+        var res = msg.content.match(reg);
+        if (res!=null&&res.length==2) {
+            client.zrangebyscore('activity',getScore(res[1],'01'),getScore(res[1],'31'),function(error,res){
+                if(error){
+                    console.log(error);
+                }
+                resMsg = {
+                    fromUserName: msg.toUserName,
+                    toUserName: msg.fromUserName,
+                    msgType: "news",
+                    articles: res,
+                    funcFlag: 0
+                }
+                weixin.sendMsg(resMsg);
+            });
+            
         } else {
             superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
                 console.log(res.text);;
@@ -103,10 +180,10 @@ weixin.textMsg(function(msg) {
 
 
         break;
-        }
+    }
 
 
-    });
+});
 
 // 监听图片消息
 weixin.imageMsg(function(msg) {
