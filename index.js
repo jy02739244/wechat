@@ -137,13 +137,16 @@ weixin.textMsg(function(msg) {
             if(error){
                 console.log(error);
             }
-            console.log("***:"+res);
+            var items=[];
+            for(var i=0;i<res.length;i++){
+                items.push(JSON.parse(res[i]));
+            }
 
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
                 msgType: "news",
-                articles: res.split(","),
+                articles: items,
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
@@ -157,11 +160,15 @@ weixin.textMsg(function(msg) {
                 if(error){
                     console.log(error);
                 }
+                var items=[];
+                for(var i=0;i<res.length;i++){
+                    items.push(JSON.parse(res[i]));
+                }
                 resMsg = {
                     fromUserName: msg.toUserName,
                     toUserName: msg.fromUserName,
                     msgType: "news",
-                    articles: res,
+                    articles: items,
                     funcFlag: 0
                 }
                 weixin.sendMsg(resMsg);
