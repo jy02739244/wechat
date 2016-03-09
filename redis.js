@@ -25,5 +25,7 @@ var getScore=function(month,day){
 }
 var a=getScore(5,'01');
 console.log(a);
+var score='2015.01.02'.replace(/\./ig,'');
+console.log(score);
 // var result=getObj('test',3);
 // console.log(result);
