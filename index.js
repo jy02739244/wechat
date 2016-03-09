@@ -1,104 +1,118 @@
 var weixin = require('weixin-api');
-var wxapi = require('./wxapi');
 var express = require('express');
 var superagent = require('superagent');
 var phantom = require('phantom');
-var async=require('async');
+var async = require('async');
 var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
-var config=wxapi();
-var redis=require('redis');
-var client =redis.createClient(5116,'10.9.21.212',{});
+var API = require('wechat-api');
+var config = require('config');
+
+var menu_config = config.get('wx.wx_menu');
+var app_id = config.get('wx.app_id');
+var app_secret = config.get('wx.app_secret');
+
+//配置
+var api = new API(app_id, app_secret);
+
+api.createMenu(menu_config, function(err, result) {
+    console.log(result);
+});
+var redis = require('redis');
+var client = redis.createClient(5116, '10.9.21.212', {});
 client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
-client.on("error", function (err) {  
+client.on("error", function(err) {
     console.log("Error " + err);
-    client.quit();   
+    client.quit();
 });
 
 
-var fetchUrl = function (obj, callback) {
-    console.log("正在抓取的是"+obj.href);
+var fetchUrl = function(obj, callback) {
+    console.log("正在抓取的是" + obj.href);
     phantom.create().then(function(ph) {
         ph.createPage().then(function(page) {
             page.open(obj.href).then(function(status) {
-                console.log(obj.href+" "+status);
+                console.log(obj.href + " " + status);
                 page.property('content').then(function(content) {
-                    var $=cheerio.load(content);
-                    var imgs=$('.dt_content_pic img');
-                    var picUrl=null;
-                    if(imgs!=null&&imgs.length>1){
-                        picUrl=imgs[1].attribs['data-src'];
+                    var $ = cheerio.load(content);
+                    var imgs = $('.dt_content_pic img');
+                    var picUrl = null;
+                    if (imgs != null && imgs.length > 1) {
+                        picUrl = imgs[1].attribs['data-src'];
                     }
-                    
+
                     page.close();
                     ph.exit();
                     callback(null, {
-                        title:$('#dt_title').text().trim(),
+                        title: $('#dt_title').text().trim(),
                         description: $('#dt_title').text().trim(),
-                        url:obj.href,
-                        time:obj.time,
-                        picUrl:picUrl
+                        url: obj.href,
+                        time: obj.time,
+                        picUrl: picUrl
                     });
                 });
             });
         });
     });
 };
-var getScore=function(month,day){
-    var date=new Date();
-    var monthStr=month>=10?month:('0'+month);
-    return date.getFullYear()+monthStr+day;
+var getScore = function(month, day) {
+    var date = new Date();
+    var monthStr = month >= 10 ? month : ('0' + month);
+    return date.getFullYear() + monthStr + day;
 }
-var getItems=function () {
+var getItems = function() {
     superagent.get('http://www.hdb.com/timeline/lejz3')
-    .end(function(err, sres) {
-        if (err) {
-            return console.log(err);
-        }
-        var topicUrls = [];
-        var $ = cheerio.load(sres.text);
-        var address = "http://www.hdb.com";
-        $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
-            var $element = $(element);
-            var timeStr = $element.find(".find_main_time p").text();
-            var time = timeStr.substring(0, 10);
-            if (!time) {
-                return;
+        .end(function(err, sres) {
+            if (err) {
+                return console.log(err);
             }
-            var href = $element.find("a[class=hd_pic_A]").attr('href');
-            var obj={time:time,href:address+href};
-            topicUrls.push(obj);
-        });
-        async.mapLimit(topicUrls, 5,function (url,callback){
-            fetchUrl(url,callback);
+            var topicUrls = [];
+            var $ = cheerio.load(sres.text);
+            var address = "http://www.hdb.com";
+            $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
+                var $element = $(element);
+                var timeStr = $element.find(".find_main_time p").text();
+                var time = timeStr.substring(0, 10);
+                if (!time) {
+                    return;
+                }
+                var href = $element.find("a[class=hd_pic_A]").attr('href');
+                var obj = {
+                    time: time,
+                    href: address + href
+                };
+                topicUrls.push(obj);
+            });
+            async.mapLimit(topicUrls, 5, function(url, callback) {
+                fetchUrl(url, callback);
 
-        },function(err, result){
-            console.log('final:');
-            // result.sort(function(a,b){
-            //     return new Date(a.time)-new Date(b.time);
-            // });
-            console.log(result);
-            client.del('activity',function(error,res){
-                if(error){
-                    console.log(error);
-                }
-                console.log("删除activity:"+res);
-                for(var i=0;i<result.length;i++){
-                    var score=result[i].time.replace(/-/ig,'');
-                    console.log(score);
-                    client.zadd('activity',score,JSON.stringify(result[i]),function(error,res){
-                        if(error){
-                            console.log(error);
-                        }
-                        console.log(res);
-                    });
-                }
+            }, function(err, result) {
+                console.log('final:');
+                // result.sort(function(a,b){
+                //     return new Date(a.time)-new Date(b.time);
+                // });
+                console.log(result);
+                client.del('activity', function(error, res) {
+                    if (error) {
+                        console.log(error);
+                    }
+                    console.log("删除activity:" + res);
+                    for (var i = 0; i < result.length; i++) {
+                        var score = result[i].time.replace(/-/ig, '');
+                        console.log(score);
+                        client.zadd('activity', score, JSON.stringify(result[i]), function(error, res) {
+                            if (error) {
+                                console.log(error);
+                            }
+                            console.log(res);
+                        });
+                    }
+                });
+
             });
 
         });
-
-    });
 }
 getItems();
 // 接入验证
@@ -122,50 +136,28 @@ weixin.textMsg(function(msg) {
 
     switch (msg.content) {
         case "更新":
-        console.log("更新");
-        getItems();
-        resMsg = {
-            fromUserName: msg.toUserName,
-            toUserName: msg.fromUserName,
-            msgType: "text",
-            content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
-            funcFlag: 0
-        }
-        weixin.sendMsg(resMsg);
-        break;
-        case "活动":
-        console.log('活动');
-        client.zrange('activity',0,5,function(error,res){
-            if(error){
-                console.log(error);
-            }
-            var items=[];
-            for(var i=0;i<res.length;i++){
-                items.push(JSON.parse(res[i]));
-            }
-
+            console.log("更新");
+            getItems();
             resMsg = {
                 fromUserName: msg.toUserName,
                 toUserName: msg.fromUserName,
-                msgType: "news",
-                articles: items,
+                msgType: "text",
+                content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
                 funcFlag: 0
             }
             weixin.sendMsg(resMsg);
-        });
-        break;
-        default:
-        var reg = /(^[1-9]|1[0-2])月活动$/;
-        var res = msg.content.match(reg);
-        if (res!=null&&res.length==2) {
-            client.zrangebyscore('activity',getScore(res[1],'01'),getScore(res[1],'31'),function(error,res){
-                if(error){
+            break;
+        case "活动":
+            console.log('活动');
+            client.zrange('activity', 0, 5, function(error, res) {
+                if (error) {
                     console.log(error);
                 }
-                var items=[];
-                for(var i=0;i<res.length;i++){
+                var items = [];
+                for (var i = 0; i < res.length; i++) {
                     items.push(JSON.parse(res[i]));
                 }
+
                 resMsg = {
                     fromUserName: msg.toUserName,
                     toUserName: msg.fromUserName,
@@ -175,23 +167,45 @@ weixin.textMsg(function(msg) {
                 }
                 weixin.sendMsg(resMsg);
             });
-            
-        } else {
-            superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
-                console.log(res.text);;
-                resMsg = {
-                    fromUserName: msg.toUserName,
-                    toUserName: msg.fromUserName,
-                    msgType: "text",
-                    content: JSON.parse(res.text).text,
-                    funcFlag: 0
-                };
-                weixin.sendMsg(resMsg);
-            });
-        }
+            break;
+        default:
+            var reg = /(^[1-9]|1[0-2])月活动$/;
+            var res = msg.content.match(reg);
+            if (res != null && res.length == 2) {
+                client.zrangebyscore('activity', getScore(res[1], '01'), getScore(res[1], '31'), function(error, res) {
+                    if (error) {
+                        console.log(error);
+                    }
+                    var items = [];
+                    for (var i = 0; i < res.length; i++) {
+                        items.push(JSON.parse(res[i]));
+                    }
+                    resMsg = {
+                        fromUserName: msg.toUserName,
+                        toUserName: msg.fromUserName,
+                        msgType: "news",
+                        articles: items,
+                        funcFlag: 0
+                    }
+                    weixin.sendMsg(resMsg);
+                });
+
+            } else {
+                superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
+                    console.log(res.text);;
+                    resMsg = {
+                        fromUserName: msg.toUserName,
+                        toUserName: msg.fromUserName,
+                        msgType: "text",
+                        content: JSON.parse(res.text).text,
+                        funcFlag: 0
+                    };
+                    weixin.sendMsg(resMsg);
+                });
+            }
 
 
-        break;
+            break;
     }
 
 
