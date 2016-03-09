@@ -1,75 +1,10 @@
 var weixin = require('weixin-api');
 var express = require('express');
 var superagent = require('superagent');
-var cheerio = require('cheerio');
-var async=require('async');
-var phantom = require('phantom');
+var reptile=require('./items');
 var app = express();
-var address = "http://www.hdb.com";
 var items = [];
-
-var fetchUrl = function (obj, callback) {
-    console.log("正在抓取的是"+obj.href);
-    phantom.create().then(function(ph) {
-        ph.createPage().then(function(page) {
-            page.open(obj.href).then(function(status) {
-                console.log(obj.href+" "+status);
-                page.property('content').then(function(content) {
-                    var $=cheerio.load(content);
-                    var imgs=$('.dt_content_pic img');
-                    var picUrl=null;
-                    if(imgs!=null&&imgs.length>1){
-                        picUrl=imgs[1].attribs['data-src'];
-                    }
-                    
-                    page.close();
-                    ph.exit();
-                    callback(null, {
-                        title:$('#dt_title').text().trim(),
-                        description: $('#dt_title').text().trim(),
-                        url:obj.href,
-                        time:obj.time,
-                        picUrl:picUrl
-                    });
-                });
-            });
-        });
-    });
-};
-function getItems() {
-    superagent.get('http://www.hdb.com/timeline/lejz3')
-    .end(function(err, sres) {
-        if (err) {
-            return console.log(err);
-        }
-        var topicUrls = [];
-        var $ = cheerio.load(sres.text);
-        $('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
-            var $element = $(element);
-            var timeStr = $element.find(".find_main_time p").text();
-            var time = timeStr.substring(0, 10);
-            if (!time) {
-                return;
-            }
-            var href = $element.find("a[class=hd_pic_A]").attr('href');
-            var obj={time:time,href:address+href};
-            topicUrls.push(obj);
-        });
-        async.mapLimit(topicUrls, 5,function (url,callback){
-            fetchUrl(url,callback);
-
-        },function(err, result){
-            console.log('final:');
-            result.sort(function(a,b){
-                return new Date(a.time)-new Date(b.time);
-            });
-            console.log(result);
-            items=result;
-        });
-
-    });
-}
-getItems();
+reptile.getItems(items);
 // 接入验证
 app.get('/', function(req, res) {
 
@@ -92,7 +27,7 @@ weixin.textMsg(function(msg) {
     switch (msg.content) {
         case "更新":
         console.log("更新");
-        getItems();
+        reptile.getItems(items);
         resMsg = {
             fromUserName: msg.toUserName,
             toUserName: msg.fromUserName,
@@ -153,26 +88,6 @@ weixin.textMsg(function(msg) {
 
 
         break;
-            // var articles = [];
-            // articles[0] = {
-            //     title : "漫步千年徽杭古道 挑战高山沙漠龙须山",
-            //     description : "漫步千年徽杭古道 挑战高山沙漠龙须山",
-            //     picUrl : "http://img2.hudongba.com/upload/_oss/userpartyimg/201601/09/61452348077740_party6.jpg",
-            //     url : "http://www.hdb.com/party/fw9x"
-            // };
-            // articles[1] = {
-            //     title : "徒步徽开古道 领略秘境白际",
-            //     description : "徒步徽开古道 领略秘境白际",
-            //     picUrl : "http://img2.hudongba.com/upload/_oss/userpartyimg/201601/09/61452348813669_party6.jpg",
-            //     url : "http://www.hdb.com/party/2s9x-PCHomeDetail.html"
-            // };
-            // articles[2] = {
-            //     title : "探访洞天福地观日出，游览八卦梯田赏云海",
-            //     description : "探访洞天福地观日出，游览八卦梯田赏云海",
-            //     picUrl : "http://img2.hudongba.com/upload/_oss/userpartyimg/201601/09/41452349110079_party4.jpg",
-            //     url : "http://www.hdb.com/party/ls9x-PCHomeDetail.html"
-            // };
-
         }
 
 
