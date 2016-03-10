@@ -6,19 +6,6 @@ var async = require('async');
 var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
-var API = require('wechat-api');
-var config = require('config');
-
-var menu_config = config.get('wx.wx_menu');
-var app_id = config.get('wx.app_id');
-var app_secret = config.get('wx.app_secret');
-
-//配置
-var api = new API(app_id, app_secret);
-
-api.createMenu(menu_config, function(err, result) {
-    console.log(result);
-});
 var redis = require('redis');
 var client = redis.createClient(5116, '10.9.21.212', {});
 client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
@@ -83,8 +70,11 @@ var getItems = function() {
                     href: address + href
                 };
                 topicUrls.push(obj);
+                if(topicUrls.length==30){
+                    return false;
+                }
             });
-            async.mapLimit(topicUrls, 5, function(url, callback) {
+            async.mapLimit(topicUrls, 3, function(url, callback) {
                 fetchUrl(url, callback);
 
             }, function(err, result) {
