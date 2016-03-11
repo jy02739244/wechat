@@ -15,6 +15,7 @@ client.on("error", function(err) {
 });
 
 
+
 var fetchUrl = function(obj, callback) {
     console.log("正在抓取的是" + obj.href);
     phantom.create().then(function(ph) {
