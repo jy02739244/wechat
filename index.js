@@ -90,7 +90,6 @@ var getItems = function() {
                                 console.log("删除activity:" + res);
                                 for (var i = 0; i < result.length; i++) {
                                     var score = result[i].time.replace(/-/ig, '');
-                                    console.log(score);
                                     client.zadd('activity', score, JSON.stringify(result[i]), function(error, res) {
                                         if (error) {
                                             console.log(error);
@@ -104,7 +103,7 @@ var getItems = function() {
 
             });
     }
-    getItems();
+    // getItems();
     // 接入验证
 app.get('/', function(req, res) {
 
