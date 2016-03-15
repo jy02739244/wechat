@@ -7,8 +7,8 @@ var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
 var redis = require('redis');
-var client = redis.createClient(5116, '10.9.21.212', {});
-client.auth('4e83bf45-e7e5-4647-be25-5a85515c2ccd');
+var client = redis.createClient(52554, '10.10.189.180', {});
+client.auth('4TGS1HHqaZ3P');
 client.on("error", function(err) {
     console.log("Error " + err);
     client.quit();
@@ -104,7 +104,7 @@ var getItems = function() {
 
             });
     }
-    // getItems();
+    getItems();
     // 接入验证
 app.get('/', function(req, res) {
 

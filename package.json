@@ -12,9 +12,9 @@
     "async": "^1.5.2",
     "cheerio": "^0.20.0",
     "express": "^4.13.4",
-    "phantom": "^2.0.4",
-    "redis": "^2.4.2",
-    "superagent": "^1.7.2",
+    "phantom": "^2.0.6",
+    "redis": "^2.5.0",
+    "superagent": "^1.8.1",
     "weixin-api": "^0.1.7"
   }
 }
