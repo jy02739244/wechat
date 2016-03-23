@@ -185,6 +185,7 @@ weixin.textMsg(function(msg) {
 		} else {
 			var delReg=/^删除 (\d{8})\s{0,1}(\d){0,1}/;
 			var delRes=msg.content.match(delReg);
+			console.log(delRes);
 			if (delRes != null && delRes.length == 3) {
 				client.zrangebyscore('activity', delRes[1], delRes[1], function(error, res) {
 					if (error) {
@@ -195,8 +196,17 @@ weixin.textMsg(function(msg) {
 						index=delRes[2];
 					}
 					if(res!=null&&res.length>0){
+						console.log(res);
 						client.zrem('activity',res[index],function(error,sres){
 							console.log('删除结果：'+sres);
+							resMsg = {
+								fromUserName: msg.toUserName,
+								toUserName: msg.fromUserName,
+								msgType: "text",
+								content: '删除结果：'+sres,
+								funcFlag: 0
+							};
+							weixin.sendMsg(resMsg);
 						});
 					}
 				}
