@@ -213,7 +213,7 @@ weixin.textMsg(function(msg) {
 
 				});
 			}else{
-				var setNumReg=/^设置数量(\d){1,2}/;
+				var setNumReg=/^设置数量(\d{1,2})/;
 				var setRes=msg.content.match(setNumReg);
 				if(setRes!=null&&setRes.length==2){
 					activityNum=setRes[1];
@@ -227,7 +227,7 @@ weixin.textMsg(function(msg) {
 					};
 					weixin.sendMsg(resMsg);
 				}else{
-					var getReg=/活动(\d){8}/;
+					var getReg=/活动(\d{8})/;
 					var getRes=msg.content.match(getReg);
 					if(getRes!=null&&getRes.length==2){
 						client.zrangebyscore('activity',getRes[1],getRes[1],function(error,res){
