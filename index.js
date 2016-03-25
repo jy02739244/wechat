@@ -6,6 +6,7 @@ var cheerio = require('cheerio');
 var superagent = require('superagent');
 var app = express();
 var redis = require('redis');
+var activityNum=30;
 var client = redis.createClient(52554, '10.10.189.180', {});
 client.auth('4TGS1HHqaZ3P');
 client.on("error", function(err) {
@@ -66,7 +67,7 @@ var getItems = function() {
 				href: address + href
 			};
 			topicUrls.push(obj);
-			if (topicUrls.length >= 30) {
+			if (topicUrls.length >= activityNum) {
 				return false;
 			}
 		});
@@ -212,25 +213,65 @@ weixin.textMsg(function(msg) {
 
 				});
 			}else{
-				superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
-					console.log(res.text);;
+				var setNumReg=/^设置数量(\d){1,2}/;
+				var setRes=msg.content.match(setNumReg);
+				if(setRes!=null&&setRes.length==2){
+					activityNum=setRes[1];
+					console.log("设置活动数量");
 					resMsg = {
 						fromUserName: msg.toUserName,
 						toUserName: msg.fromUserName,
 						msgType: "text",
-						content: JSON.parse(res.text).text,
+						content: '设置活动数量为'+setRes[1],
 						funcFlag: 0
 					};
 					weixin.sendMsg(resMsg);
-				});
+				}else{
+					var getReg=/活动(\d){8}/;
+					var getRes=msg.content.match(getReg);
+					if(getRes!=null&&getRes.length==2){
+						client.zrangebyscore('activity',getRes[1],getRes[1],function(error,res){
+							if (error) {
+								console.log(error);
+							}
+							var items = [];
+							var itemLength = res.length;
+							if (res.length > 8) {
+								itemLength = 8;
+							}
+							for (var i = 0; i < itemLength; i++) {
+								items.push(JSON.parse(res[i]));
+							}
+							resMsg = {
+								fromUserName: msg.toUserName,
+								toUserName: msg.fromUserName,
+								msgType: "news",
+								articles: items,
+								funcFlag: 0
+							}
+							weixin.sendMsg(resMsg);
+						});
+					}else{
+						superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid=jy02739244&info=" + encodeURI(msg.content)).end(function(err, res) {
+							console.log(res.text);;
+							resMsg = {
+								fromUserName: msg.toUserName,
+								toUserName: msg.fromUserName,
+								msgType: "text",
+								content: JSON.parse(res.text).text,
+								funcFlag: 0
+							};
+							weixin.sendMsg(resMsg);
+						});
+					}
+
+				}
+
+
+				break;
 			}
-
 		}
-
-
-		break;
 	}
-
 
 });
 
