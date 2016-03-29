@@ -21,7 +21,7 @@ var getScore = function(month, day) {
 }
 
 
-    dataUtil.getItems(client);
+    // dataUtil.getItems(client);
     // 接入验证
     app.get('/', function(req, res) {
 
@@ -44,7 +44,7 @@ weixin.textMsg(function(msg) {
 	switch (msg.content) {
 		case "更新":
 		console.log("更新");
-		dataUtil.getItems();
+		dataUtil.getItems(client);
 		resMsg = {
 			fromUserName: msg.toUserName,
 			toUserName: msg.fromUserName,
