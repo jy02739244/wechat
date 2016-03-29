@@ -1,13 +1,11 @@
 var weixin = require('weixin-api');
 var express = require('express');
-var phantom = require('phantom');
-var async = require('async');
-var cheerio = require('cheerio');
+var dataUtil=require('./getData.js');
 var superagent = require('superagent');
 var app = express();
 var redis = require('redis');
-var activityNum=30;
-var client = redis.createClient(52554, '10.10.189.180', {});
+// var client = redis.createClient(52554, '10.10.189.180', {});
+var client = redis.createClient(6379, '192.168.8.38', {});
 client.auth('4TGS1HHqaZ3P');
 client.on("error", function(err) {
 	console.log("Error " + err);
@@ -15,95 +13,15 @@ client.on("error", function(err) {
 });
 
 
-var fetchUrl = function(ph,obj, callback) {
-	console.log("正在抓取的是" + obj.href);
-	ph.createPage().then(function(page) {
-		page.open(obj.href).then(function(status) {
-			console.log(obj.href + " " + status);
-			page.property('content').then(function(content) {
-				var $ = cheerio.load(content);
-				var imgs = $('.dt_content_pic img');
-				var picUrl = null;
-				if (imgs != null && imgs.length > 1) {
-					picUrl = imgs[1].attribs['data-src'];
-				}
-				page.close();
-				callback(null, {
-					title: $('#dt_title').text().trim(),
-					description: $('#dt_title').text().trim(),
-					url: obj.href,
-					time: obj.time,
-					picUrl: picUrl
-				});
-			});
-		});
-	});
-};
+
 var getScore = function(month, day) {
 	var date = new Date();
 	var monthStr = month >= 10 ? month : ('0' + month);
 	return date.getFullYear() + monthStr + day;
 }
 
-var getItems = function() {
-	superagent.get('http://www.hdb.com/timeline/lejz3')
-	.end(function(err, sres) {
-		if (err) {
-			return console.log(err);
-		}
-		var topicUrls = [];
-		var $ = cheerio.load(sres.text);
-		var address = "http://www.hdb.com";
-		$('#hd_lieb1 .find_main_li.img.canJoin').each(function(idx, element) {
-			var $element = $(element);
-			var timeStr = $element.find(".find_main_time p").text();
-			var time = timeStr.substring(0, 10);
-			if (!time) {
-				return;
-			}
-			var href = $element.find("a[class=hd_pic_A]").attr('href');
-			var obj = {
-				time: time,
-				href: address + href
-			};
-			topicUrls.push(obj);
-			if (topicUrls.length >= activityNum) {
-				return false;
-			}
-		});
-		phantom.create().then(function(ph) {
 
-			async.mapLimit(topicUrls, 3, function(url, callback) {
-				fetchUrl(ph, url, callback);
-
-			}, function(err, result) {
-				console.log('final:');
-				result.sort(function(a, b) {
-					return new Date(a.time) - new Date(b.time);
-				});
-				ph.exit();
-				console.log(result);
-				client.del('activity', function(error, res) {
-					if (error) {
-						console.log(error);
-					}
-					console.log("删除activity:" + res);
-					for (var i = 0; i < result.length; i++) {
-						var score = result[i].time.replace(/-/ig, '');
-						client.zadd('activity', score, JSON.stringify(result[i]), function(error, res) {
-							if (error) {
-								console.log(error);
-							}
-							console.log(res);
-						});
-					}
-				});
-			});
-		});
-
-	});
-}
-    // getItems();
+    dataUtil.getItems(client);
     // 接入验证
     app.get('/', function(req, res) {
 
@@ -126,7 +44,7 @@ weixin.textMsg(function(msg) {
 	switch (msg.content) {
 		case "更新":
 		console.log("更新");
-		getItems();
+		dataUtil.getItems();
 		resMsg = {
 			fromUserName: msg.toUserName,
 			toUserName: msg.fromUserName,
@@ -216,7 +134,7 @@ weixin.textMsg(function(msg) {
 				var setNumReg=/^设置数量(\d{1,2})/;
 				var setRes=msg.content.match(setNumReg);
 				if(setRes!=null&&setRes.length==2){
-					activityNum=setRes[1];
+					dataUtil.activityNum=setRes[1];
 					console.log("设置活动数量");
 					resMsg = {
 						fromUserName: msg.toUserName,
