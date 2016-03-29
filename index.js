@@ -4,8 +4,8 @@ var dataUtil=require('./getData.js');
 var superagent = require('superagent');
 var app = express();
 var redis = require('redis');
-// var client = redis.createClient(52554, '10.10.189.180', {});
-var client = redis.createClient(6379, '192.168.8.38', {});
+var client = redis.createClient(52554, '10.10.189.180', {});
+// var client = redis.createClient(6379, '192.168.8.38', {});
 client.auth('4TGS1HHqaZ3P');
 client.on("error", function(err) {
 	console.log("Error " + err);
