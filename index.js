@@ -21,7 +21,7 @@ var getScore = function(month, day) {
 }
 
 
-    // dataUtil.getItems(client);
+    dataUtil.getItems(client);
     // 接入验证
     app.get('/', function(req, res) {
 

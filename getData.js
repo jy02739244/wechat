@@ -27,7 +27,12 @@ var fetchUrl = function(ph,obj, callback) {
 				var imgs = $('.dt_content_pic img');
 				var picUrl = null;
 				if (imgs != null && imgs.length > 1) {
-					picUrl = imgs[0].attribs['data-src'];
+					if(imgs[0].attribs['data-src']){
+						picUrl = imgs[0].attribs['data-src'];
+					}else{
+						picUrl = imgs[0].attribs['src'];
+					}
+					
 				}
 				page.close();
 				callback(null, {
