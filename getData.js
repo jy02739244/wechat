@@ -10,7 +10,7 @@ Date.prototype.addDays=function(days){
 
 function getScheduleDate(str){
 	var date=new Date(str);
-	date.addDays(1);
+	// date.addDays(1);
 	date.setHours(23);
 	date.setMinutes(59);
 	date.setSeconds(59);
