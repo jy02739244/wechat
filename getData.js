@@ -3,11 +3,11 @@ var phantom = require('phantom');
 var async = require('async');
 var cheerio = require('cheerio');
 var schedule = require("node-schedule");
+var mail=require("./mail.js");
 var activityNum=30;
 Date.prototype.addDays=function(days){
 	this.setDate(this.getDate()+days);
 }
-
 function getScheduleDate(str){
 	var date=new Date(str);
 	// date.addDays(1);
@@ -103,6 +103,7 @@ var getItems = function(client) {
 						var date=getScheduleDate(topicUrls[0].time);
 						console.log('下次爬虫时间：'+date);
 						console.log('activityNum:'+activityNum);
+						mail.sendEmail('lomy66666@163.com','微信爬虫结果','本次爬虫任务完成，活动数量：'+activityNum+',\r\n下次爬虫时间：'+date);
 						schedule.scheduleJob(date,function(){
 							getItems(client);
 						});
