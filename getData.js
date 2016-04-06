@@ -4,6 +4,8 @@ var async = require('async');
 var cheerio = require('cheerio');
 var schedule = require("node-schedule");
 var mail=require("./mail.js");
+var image=require("./imageSize.js");
+var Q=require('q');
 var activityNum=30;
 Date.prototype.addDays=function(days){
 	this.setDate(this.getDate()+days);
@@ -25,23 +27,29 @@ var fetchUrl = function(ph,obj, callback) {
 			page.property('content').then(function(content) {
 				var $ = cheerio.load(content);
 				var imgs = $('.dt_content_pic img');
-				var picUrl = null;
-				if (imgs != null && imgs.length > 1) {
-					if(imgs[0].attribs['data-src']){
-						picUrl = imgs[0].attribs['data-src'];
-					}else{
-						picUrl = imgs[0].attribs['src'];
-					}
-					
+				var defer = Q.defer();
+				if(imgs&&imgs.length>0){
+					image.callImage(imgs,0,defer).then(function(success){
+						page.close();
+						callback(null, {
+							title: $('#dt_title').text().trim(),
+							description: $('#dt_title').text().trim(),
+							url: obj.href,
+							time: obj.time,
+							picUrl: success
+						});
+					});
+				}else{
+					callback(null, {
+						title: $('#dt_title').text().trim(),
+						description: $('#dt_title').text().trim(),
+						url: obj.href,
+						time: obj.time,
+						picUrl: null
+					});
 				}
-				page.close();
-				callback(null, {
-					title: $('#dt_title').text().trim(),
-					description: $('#dt_title').text().trim(),
-					url: obj.href,
-					time: obj.time,
-					picUrl: picUrl
-				});
+
+				
 			});
 		});
 	});
