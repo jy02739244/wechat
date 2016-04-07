@@ -6,7 +6,7 @@ var schedule = require("node-schedule");
 var mail=require("./mail.js");
 var image=require("./imageSize.js");
 var Q=require('q');
-var activityNum=30;
+var activityNum;
 Date.prototype.addDays=function(days){
 	this.setDate(this.getDate()+days);
 }
@@ -55,6 +55,32 @@ var fetchUrl = function(ph,obj, callback) {
 	});
 };
 
+var getActivityNums=function(client){
+	var defer = Q.defer();
+	client.get('activityNum',function(error,res){
+		if (error) {
+			console.log(error);
+		}
+		console.log('爬虫数量：'+res);
+		if(res){
+			activityNum=res;
+			defer.resolve(res);
+		}else{
+			activityNum=28;
+			defer.resolve(30);
+		}
+	});
+	return defer.promise;
+}
+
+var setActivityNums=function(client,nums){
+	client.set('activityNum',nums,function(error,res){
+		if (error) {
+			console.log(error);
+		}
+		console.log('设置爬虫数量为'+nums+'结果：'+res);
+	});
+}
 var getItems = function(client) {
 	superagent.get('http://www.hdb.com/timeline/lejz3')
 	.end(function(err, sres) {
@@ -76,6 +102,7 @@ var getItems = function(client) {
 				time: time,
 				href: address + href
 			};
+			console.log(obj);
 			topicUrls.push(obj);
 			if (topicUrls.length >= activityNum) {
 				return false;
@@ -127,4 +154,5 @@ var getItems = function(client) {
 	});
 }
 exports.getItems=getItems;
-exports.activityNum=activityNum;
+exports.getActivityNums=getActivityNums;
+exports.setActivityNums=setActivityNums;

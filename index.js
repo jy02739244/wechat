@@ -21,7 +21,9 @@ var getScore = function(month, day) {
 }
 
 
-    // dataUtil.getItems(client);
+// dataUtil.getActivityNums(client).then(function(success){
+// 	dataUtil.getItems(client);
+// });
     // 接入验证
     app.get('/', function(req, res) {
 
@@ -44,15 +46,17 @@ weixin.textMsg(function(msg) {
 	switch (msg.content) {
 		case "更新":
 		console.log("更新");
-		dataUtil.getItems(client);
-		resMsg = {
-			fromUserName: msg.toUserName,
-			toUserName: msg.fromUserName,
-			msgType: "text",
-			content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
-			funcFlag: 0
-		}
-		weixin.sendMsg(resMsg);
+		dataUtil.getActivityNums(client).then(function(success){
+			dataUtil.getItems(client);
+			resMsg = {
+				fromUserName: msg.toUserName,
+				toUserName: msg.fromUserName,
+				msgType: "text",
+				content: "稍后回复‘活动’获取上海追梦户外最新活动列表！",
+				funcFlag: 0
+			}
+			weixin.sendMsg(resMsg);
+		});
 		break;
 		case "活动":
 		console.log('活动');
@@ -134,8 +138,7 @@ weixin.textMsg(function(msg) {
 				var setNumReg=/^设置数量(\d{1,2})/;
 				var setRes=msg.content.match(setNumReg);
 				if(setRes!=null&&setRes.length==2){
-					dataUtil.activityNum=setRes[1];
-					console.log("设置活动数量");
+					dataUtil.setActivityNums(client,setRes[1]);
 					resMsg = {
 						fromUserName: msg.toUserName,
 						toUserName: msg.fromUserName,
