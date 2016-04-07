@@ -5,13 +5,13 @@ var sendEmail=function(toUser,title,content){
   var transporter = nodemailer.createTransport({
     service: '163',
     auth: {
-      user: 'lomy66666@163.com',
-      pass: '5361481qq'
+      user: '',
+      pass: ''
     }
   });
 
   transporter.sendMail({
-    from: 'lomy66666@163.com',
+    from: '',
     to: toUser,
     subject: title,
     text: content
