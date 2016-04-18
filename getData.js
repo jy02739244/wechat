@@ -146,13 +146,16 @@ var refreshActivitys=function(client,result){
 			});
 		}
 		resObj=[];
-		if(topicUrls!=null&&topicUrls.length>0){
-			var date=getScheduleDate(topicUrls[0].time);
+		if(resObj!=null&&resObj.length>0){
+			resObj.sort(function(a,b){
+				return new Date(a.time)-new Date(b.time);
+			});
+			var date=getScheduleDate(resObj[0].time);
 			console.log('下次爬虫时间：'+date);
 			console.log('activityNum:'+activityNum);
 						// mail.sendEmail('lomy66666@163.com','微信爬虫结果','本次爬虫任务完成，活动数量：'+activityNum+',\r\n下次爬虫时间：'+date);
 						schedule.scheduleJob(date,function(){
-							getItems(client);
+							getActivitys(client,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
 						});
 					}
 
