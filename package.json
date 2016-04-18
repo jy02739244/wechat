@@ -19,6 +19,7 @@
     "q": "^1.4.1",
     "redis": "^2.5.0",
     "superagent": "^1.8.1",
+    "superagent-charset": "^1.0.0",
     "weixin-api": "^0.1.7"
   }
 }

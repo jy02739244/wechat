@@ -47,7 +47,8 @@ weixin.textMsg(function(msg) {
 		case "更新":
 		console.log("更新");
 		dataUtil.getActivityNums(client).then(function(success){
-			dataUtil.getItems(client);
+			// dataUtil.getItems(client);
+			dataUtil.getActivitys(client,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
 			resMsg = {
 				fromUserName: msg.toUserName,
 				toUserName: msg.fromUserName,

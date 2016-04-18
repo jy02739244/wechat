@@ -5,6 +5,8 @@ var cheerio = require('cheerio');
 var schedule = require("node-schedule");
 // var mail=require("./mail.js");
 var image=require("./imageSize.js");
+var charset = require('superagent-charset');
+charset(superagent);
 var Q=require('q');
 var activityNum;
 Date.prototype.addDays=function(days){
@@ -18,7 +20,7 @@ function getScheduleDate(str){
 	date.setSeconds(59);
 	return date;
 }
-
+var resObj=[];
 var fetchUrl = function(ph,obj, callback) {
 	console.log("正在抓取的是" + obj.href);
 	ph.createPage().then(function(page) {
@@ -120,24 +122,34 @@ var getItems = function(client) {
 				});
 				ph.exit();
 				console.log(result);
-				client.del('activity', function(error, res) {
-					if (error) {
-						console.log(error);
-					}
-					console.log("删除activity:" + res);
-					for (var i = 0; i < result.length; i++) {
-						var score = result[i].time.replace(/-/ig, '');
-						client.zadd('activity', score, JSON.stringify(result[i]), function(error, res) {
-							if (error) {
-								console.log(error);
-							}
-							console.log(res);
-						});
-					}
-					if(topicUrls!=null&&topicUrls.length>0){
-						var date=getScheduleDate(topicUrls[0].time);
-						console.log('下次爬虫时间：'+date);
-						console.log('activityNum:'+activityNum);
+				refreshActivitys(client,result);
+
+			});
+		});
+
+	});
+}
+
+var refreshActivitys=function(client,result){
+	client.del('activity', function(error, res) {
+		if (error) {
+			console.log(error);
+		}
+		console.log("删除activity:" + res);
+		for (var i = 0; i < result.length; i++) {
+			var score = result[i].time.replace(/-/ig, '');
+			client.zadd('activity', score, JSON.stringify(result[i]), function(error, res) {
+				if (error) {
+					console.log(error);
+				}
+				console.log(res);
+			});
+		}
+		resObj=[];
+		if(topicUrls!=null&&topicUrls.length>0){
+			var date=getScheduleDate(topicUrls[0].time);
+			console.log('下次爬虫时间：'+date);
+			console.log('activityNum:'+activityNum);
 						// mail.sendEmail('lomy66666@163.com','微信爬虫结果','本次爬虫任务完成，活动数量：'+activityNum+',\r\n下次爬虫时间：'+date);
 						schedule.scheduleJob(date,function(){
 							getItems(client);
@@ -147,12 +159,52 @@ var getItems = function(client) {
 
 
 				});
+}
 
-			});
+var getActivitys=function(client,url){
+	superagent.get(url).charset('gbk').end(function(err,res){
+		if (err) {
+			return console.log(err);
+		}
+		var $=cheerio.load(res.text);
+		var a=$('.list-row .activity-content');
+		
+		a.each(function(idx,element){
+			$element=$(element);
+			var hd=$element.find('.hd .activity-img-wrap a');
+			var bd=$element.find('.bd .txt-details-info .rele-time');
+			var picUrl=hd.find('img').attr('src');
+			var reg = /^活动时间：[\s\S]* 至 ([\S]{10}) 商定$/;
+			var time = bd.text().match(reg);
+			if(time&&time.length==2){
+				var date=new Date(time[1]);
+				if(date>new Date()){
+					var obj = {
+						time: time[1],
+						url: hd.attr('href'),
+						title:hd.attr('title'),
+						description:hd.attr('title'),
+						picUrl:picUrl
+					}; 
+					resObj.push(obj);
+				}
+				
+			} 
+			
 		});
+		var currPage=$('.cust-page-list .pg strong');
+		var nextPage=currPage.next('a[class!=nxt]');
+		if(nextPage&&nextPage.attr('href')){
+			getActivitys(client,nextPage.attr('href'));
+		}else{
+			refreshActivitys(client,resObj);
+
+		}
 
 	});
 }
 exports.getItems=getItems;
 exports.getActivityNums=getActivityNums;
 exports.setActivityNums=setActivityNums;
+exports.getActivitys=getActivitys;
+// getActivitys(null,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
