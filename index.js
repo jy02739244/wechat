@@ -109,7 +109,7 @@ weixin.textMsg(function(msg) {
 						fromUserName: msg.toUserName,
 						toUserName: msg.fromUserName,
 						msgType: "text",
-						content: res[1]'月活动暂未发布',
+						content: res[1]+'月活动暂未发布',
 						funcFlag: 0
 					}
 				}
