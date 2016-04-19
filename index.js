@@ -193,7 +193,12 @@ weixin.textMsg(function(msg) {
 								content: JSON.parse(res.text).text,
 								funcFlag: 0
 							};
-							weixin.sendMsg(resMsg);
+							try{
+								weixin.sendMsg(resMsg);
+							}catch(error){
+								console.log(error);
+							}
+							
 						});
 					}
 
