@@ -84,7 +84,7 @@ weixin.textMsg(function(msg) {
 		var reg = /(^[1-9]|1[0-2])月活动$/;
 		var mres = msg.content.match(reg);
 		if (mres != null && mres.length == 2) {
-			client.zrangebyscore('activity', getScore(mres[1], '01'), getScore(res[1], '31'), function(error, res) {
+			client.zrangebyscore('activity', getScore(mres[1], '01'), getScore(mres[1], '31'), function(error, res) {
 				if (error) {
 					console.log(error);
 				}
