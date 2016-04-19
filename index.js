@@ -88,28 +88,38 @@ weixin.textMsg(function(msg) {
 				if (error) {
 					console.log(error);
 				}
-				var items = [];
-				var itemLength = res.length;
-				if (res.length > 8) {
-					itemLength = 8;
+				if(res&&res.length>0){
+					var items = [];
+					var itemLength = res.length;
+					if (res.length > 8) {
+						itemLength = 8;
+					}
+					for (var i = 0; i < itemLength; i++) {
+						items.push(JSON.parse(res[i]));
+					}
+					resMsg = {
+						fromUserName: msg.toUserName,
+						toUserName: msg.fromUserName,
+						msgType: "news",
+						articles: items,
+						funcFlag: 0
+					}
+				}else{
+					resMsg = {
+						fromUserName: msg.toUserName,
+						toUserName: msg.fromUserName,
+						msgType: "text",
+						content: res[1]'月活动暂未发布',
+						funcFlag: 0
+					}
 				}
-				for (var i = 0; i < itemLength; i++) {
-					items.push(JSON.parse(res[i]));
-				}
-				resMsg = {
-					fromUserName: msg.toUserName,
-					toUserName: msg.fromUserName,
-					msgType: "news",
-					articles: items,
-					funcFlag: 0
-				}
+				
 				weixin.sendMsg(resMsg);
 			});
 
 		} else {
 			var delReg=/^删除 (\d{8})\s{0,1}(\d){0,1}/;
 			var delRes=msg.content.match(delReg);
-			console.log(delRes);
 			if (delRes != null && delRes.length == 3) {
 				client.zrangebyscore('activity', delRes[1], delRes[1], function(error, res) {
 					if (error) {
@@ -231,6 +241,24 @@ weixin.eventMsg(function(msg) {
 			funcFlag: 0
 		};
 		weixin.sendMsg(resMsg);
+		client.zrange('activity', 0, 7, function(error, res) {
+			if (error) {
+				console.log(error);
+			}
+			var items = [];
+			for (var i = 0; i < res.length; i++) {
+				items.push(JSON.parse(res[i]));
+			}
+
+			resMsg = {
+				fromUserName: msg.toUserName,
+				toUserName: msg.fromUserName,
+				msgType: "news",
+				articles: items,
+				funcFlag: 0
+			}
+			weixin.sendMsg(resMsg);
+		});
 	}
 });
 
