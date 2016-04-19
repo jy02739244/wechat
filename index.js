@@ -82,9 +82,9 @@ weixin.textMsg(function(msg) {
 		break;
 		default:
 		var reg = /(^[1-9]|1[0-2])月活动$/;
-		var res = msg.content.match(reg);
-		if (res != null && res.length == 2) {
-			client.zrangebyscore('activity', getScore(res[1], '01'), getScore(res[1], '31'), function(error, res) {
+		var mres = msg.content.match(reg);
+		if (mres != null && mres.length == 2) {
+			client.zrangebyscore('activity', getScore(mres[1], '01'), getScore(res[1], '31'), function(error, res) {
 				if (error) {
 					console.log(error);
 				}
@@ -109,7 +109,7 @@ weixin.textMsg(function(msg) {
 						fromUserName: msg.toUserName,
 						toUserName: msg.fromUserName,
 						msgType: "text",
-						content: res[1]+'月活动暂未发布',
+						content: mres[1]+'月活动暂未发布',
 						funcFlag: 0
 					}
 				}
@@ -241,24 +241,6 @@ weixin.eventMsg(function(msg) {
 			funcFlag: 0
 		};
 		weixin.sendMsg(resMsg);
-		client.zrange('activity', 0, 7, function(error, res) {
-			if (error) {
-				console.log(error);
-			}
-			var items = [];
-			for (var i = 0; i < res.length; i++) {
-				items.push(JSON.parse(res[i]));
-			}
-
-			resMsg = {
-				fromUserName: msg.toUserName,
-				toUserName: msg.fromUserName,
-				msgType: "news",
-				articles: items,
-				funcFlag: 0
-			}
-			weixin.sendMsg(resMsg);
-		});
 	}
 });
 
