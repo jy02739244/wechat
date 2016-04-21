@@ -185,7 +185,9 @@ weixin.textMsg(function(msg) {
 						});
 					}else{
 						console.log('userid:'+msg.fromUserName+",content:"+msg.content);
-						superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid="+msg.fromUserName+"&info=" + encodeURI(msg.content)).end(function(err, res) {
+						var reg=/[^a-zA-Z0-9]/g;
+						var userId=msg.fromUserName.replace(reg,'');
+						superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid="+userId+"&info=" + encodeURI(msg.content)).end(function(err, res) {
 							console.log(res.text);;
 							resMsg = {
 								fromUserName: msg.toUserName,
