@@ -192,7 +192,7 @@ weixin.textMsg(function(msg) {
 							var resObj=JSON.parse(res.text);
 							var content=null;
 							if(resObj.url){
-								content=resObj.text+",<a target='_blank' href='+"+resObj.url+"'>打开页面</a>"
+								content=resObj.text+",<a target='_blank' href='"+resObj.url+"'>打开页面</a>"
 							}else{
 								content=resObj.text;
 							}
