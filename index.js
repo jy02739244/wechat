@@ -189,11 +189,18 @@ weixin.textMsg(function(msg) {
 						var userId=msg.fromUserName.replace(reg,'');
 						superagent.get("http://www.tuling123.com/openapi/api?key=ce3555253d565d66b6c232ee8c587900&userid="+userId+"&info=" + encodeURI(msg.content)).end(function(err, res) {
 							console.log(res.text);;
+							var resObj=JSON.parse(res.text);
+							var content=null;
+							if(resObj.url){
+								content=resObj.text+",<a target='_blank' href='+"+resObj.url+"'>打开页面</a>"
+							}else{
+								content=resObj.text;
+							}
 							resMsg = {
 								fromUserName: msg.toUserName,
 								toUserName: msg.fromUserName,
 								msgType: "text",
-								content: JSON.parse(res.text).text,
+								content: content,
 								funcFlag: 0
 							};
 							try{
