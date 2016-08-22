@@ -242,13 +242,14 @@ function getApi(client,num){
 				}
 
 			};
-			getApi(++num);
+			getApi(client,++num);
 		}else{
+			console.log(resObj);
 			refreshActivitys(client,resObj);
 		}
 		
 
-		console.log(resObj);
+		
 	});
 }
 exports.getItems=getItems;
@@ -257,4 +258,4 @@ exports.setActivityNums=setActivityNums;
 exports.getActivitys=getActivitys;
 exports.getApi=getApi;
 // getActivitys(null,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
-//getApi(1);
+getApi(null,1);
