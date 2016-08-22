@@ -231,8 +231,12 @@ function getApi(client,num){
 				var item=items.info_list[i];
 				var date=new Date(item.info_start_date);
 				if(date>new Date()){
+					var time = item.info_start_date.substring(0, 10);
+					if (!time) {
+						return;
+					}
 					var obj = {
-						time: item.info_start_date,
+						time: time;,
 						url: address+item.info_type+'/'+item.info_id36,
 						title:item.info_title,
 						description:item.info_title,
