@@ -236,7 +236,7 @@ function getApi(client,num){
 						return;
 					}
 					var obj = {
-						time: time;,
+						time: time,
 						url: address+item.info_type+'/'+item.info_id36,
 						title:item.info_title,
 						description:item.info_title,
