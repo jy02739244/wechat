@@ -5,7 +5,7 @@ var superagent = require('superagent');
 var app = express();
 var redis = require('redis');
 var client = redis.createClient(52554, '10.10.189.180', {});
-// var client = redis.createClient(6379, '192.168.8.38', {});
+// var client = redis.createClient(6379, '192.168.8.37', {});
 client.auth('4TGS1HHqaZ3P');
 client.on("error", function(err) {
 	console.log("Error " + err);
@@ -48,7 +48,8 @@ weixin.textMsg(function(msg) {
 		console.log("更新");
 		dataUtil.getActivityNums(client).then(function(success){
 			// dataUtil.getItems(client);
-			dataUtil.getActivitys(client,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
+			// dataUtil.getActivitys(client,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
+			dataUtil.getApi(client,1);
 			resMsg = {
 				fromUserName: msg.toUserName,
 				toUserName: msg.fromUserName,

@@ -5,6 +5,7 @@ var cheerio = require('cheerio');
 var schedule = require("node-schedule");
 // var mail=require("./mail.js");
 var image=require("./imageSize.js");
+var fs = require('fs');
 var charset = require('superagent-charset');
 charset(superagent);
 var Q=require('q');
@@ -206,8 +207,54 @@ var getActivitys=function(client,url){
 
 	});
 }
+
+function writeFile(file,content){  
+
+	fs.appendFile(file, content, function(err){  
+		if(err)  
+			console.log("fail " + err);  
+		else  
+			console.log("写入文件ok");  
+	});  
+}  
+
+function getApi(client,num){
+	superagent.get('http://www.hdb.com/post/api:170?query_type=5&timeline_user_id36=lejz3&page_num='+num)
+	.end(function(err, sres) {
+		if (err) {
+			return console.log(err);
+		}
+		var items=JSON.parse(sres.text);
+		var address = "http://www.hdb.com/";
+		if(items.next_page!=0){
+			for (var i = 0; i < items.info_list.length; i++) {
+				var item=items.info_list[i];
+				var date=new Date(item.info_start_date);
+				if(date>new Date()){
+					var obj = {
+						time: item.info_start_date,
+						url: address+item.info_type+'/'+item.info_id36,
+						title:item.info_title,
+						description:item.info_title,
+						picUrl:item.info_image_url
+					}; 
+					resObj.push(obj);
+				}
+
+			};
+			getApi(++num);
+		}else{
+			refreshActivitys(client,resObj);
+		}
+		
+
+		console.log(resObj);
+	});
+}
 exports.getItems=getItems;
 exports.getActivityNums=getActivityNums;
 exports.setActivityNums=setActivityNums;
 exports.getActivitys=getActivitys;
+exports.getApi=getApi;
 // getActivitys(null,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
+//getApi(1);
