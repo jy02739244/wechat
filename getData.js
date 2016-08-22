@@ -258,4 +258,4 @@ exports.setActivityNums=setActivityNums;
 exports.getActivitys=getActivitys;
 exports.getApi=getApi;
 // getActivitys(null,'http://u.8264.com/home-space-uid-40344806-do-ownactivity-type-orig.html');
-getApi(null,1);
+// getApi(null,1);
