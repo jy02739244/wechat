@@ -30,8 +30,8 @@ var fetchUrl = function(ph,obj, callback) {
 			page.property('content').then(function(content) {
 				var $ = cheerio.load(content);
 				var imgs = $('.dt_content_pic img');
-				var defer = Q.defer();
 				if(imgs&&imgs.length>0){
+					var defer = Q.defer();
 					image.callImage(imgs,0,defer).then(function(success){
 						page.close();
 						callback(null, {
@@ -210,14 +210,14 @@ var getActivitys=function(client,url){
 
 function writeFile(file,content){  
 
-	fs.appendFile(file, content, function(err){  
+	fs.writeFile(file, content, function(err){  
 		if(err)  
 			console.log("fail " + err);  
 		else  
 			console.log("写入文件ok");  
 	});  
 }  
-
+var topicUrls = [];
 function getApi(client,num){
 	superagent.get('http://www.hdb.com/post/api:170?query_type=5&timeline_user_id36=lejz3&page_num='+num)
 	.end(function(err, sres) {
@@ -226,6 +226,7 @@ function getApi(client,num){
 		}
 		var items=JSON.parse(sres.text);
 		var address = "http://www.hdb.com/";
+		
 		if(items.next_page!=0){
 			for (var i = 0; i < items.info_list.length; i++) {
 				var item=items.info_list[i];
@@ -237,23 +238,50 @@ function getApi(client,num){
 					}
 					var obj = {
 						time: time,
-						url: address+item.info_type+'/'+item.info_id36,
-						title:item.info_title,
-						description:item.info_title,
-						picUrl:item.info_image_url
-					}; 
-					resObj.push(obj);
+						href: address+item.info_type+'/'+item.info_id36
+					};
+					console.log(obj);
+					topicUrls.push(obj);
+					if (topicUrls.length >= activityNum) {
+						return false;
+					}
+					
 				}
-
-			};
+			}
 			getApi(client,++num);
 		}else{
-			console.log(resObj);
-			refreshActivitys(client,resObj);
-		}
-		
+			// console.log(resObj);
+			phantom.create().then(function(ph) {
 
-		
+				async.mapLimit(topicUrls, 3, function(url, callback) {
+					fetchUrl(ph, url, callback);
+
+				}, function(err, result) {
+					console.log('final:');
+					var finalArr=[];
+					for (var i = 0; i < result.length; i++) {
+						var obj=result[i];
+						if(obj.picUrl){
+							finalArr.push(obj);
+						}
+
+					}
+					finalArr.sort(function(a, b) {
+						return new Date(a.time) - new Date(b.time);
+					});
+					ph.exit();
+					console.log(finalArr);
+					refreshActivitys(client,finalArr);
+					// writeFile('a.txt',JSON.stringify(finalArr));
+				});
+
+
+				});
+
+		}
+
+
+
 	});
 }
 exports.getItems=getItems;

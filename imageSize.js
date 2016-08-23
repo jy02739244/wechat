@@ -5,7 +5,7 @@ var sizeOf = require('image-size');
 var Q=require('q');
 var defer = Q.defer();
 function imageSize(imgUrl) {
-	var subdefer = Q.defer();
+	var defer = Q.defer();
 	var options = url.parse(imgUrl);
 	http.get(options, function (response) {
 		var chunks = [];
@@ -14,10 +14,22 @@ function imageSize(imgUrl) {
 		}).on('end', function() {
 			var buffer = Buffer.concat(chunks);
 			var res=sizeOf(buffer);
-			subdefer.resolve(res);
+			defer.resolve(res);
 		});
 	});
-	return subdefer.promise;
+	return defer.promise;
+}
+
+function syncImageSize(imgUrl,obj){
+	var defer = Q.defer();
+	imageSize(imgUrl).then(function(success){
+		if(success.width>200&&success.height>200){
+			obj.picUrl=imgUrl;
+			defer.resolve(obj);
+		}
+		
+	});
+	return defer.promise;
 }
 
 function callImage(imgUrls,i,defer){
@@ -44,4 +56,5 @@ function callImage(imgUrls,i,defer){
 }
 
 exports.callImage = callImage;
+exports.syncImageSize = syncImageSize;
 
